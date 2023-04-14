@@ -3,35 +3,63 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strings"
 )
 
 func main() {
+	fmt.Println("This tools checks if the domain has mx record,spf record and dmarc record")
 	fmt.Println("Enter domain name")
 
 	domain := bufio.NewScanner(os.Stdin)
 	domain.Scan()
+	check_mx_spr_dmarc(domain.Text())
 
-	record, err := net.LookupMX(domain.Text())
+}
+
+func check_mx_spr_dmarc(domain string) {
+
+	var hasMX, hasSPF, hasDMARC bool
+	var spfRecord, dmarcRecord string
+
+	mxRecords, err := net.LookupMX(domain)
+
 	if err != nil {
-		panic(err)
-
+		log.Printf("Error: %v\n", err)
 	}
 
-	fmt.Printf("Hostname: %s and Preference number: %d\n", record[0].Host, record[0].Pref)
-
-	spf, err := net.LookupTXT(domain.Text())
-	if err != nil {
-		panic(err)
+	if len(mxRecords) > 0 {
+		hasMX = true
 	}
 
-	for _, spfr := range spf {
-		if strings.HasPrefix(spfr, "v=DMARC1") {
-			fmt.Println(spfr)
+	txtRecords, err := net.LookupTXT(domain)
+
+	if err != nil {
+		log.Printf("Error:%v\n", err)
+	}
+
+	for _, record := range txtRecords {
+		if strings.HasPrefix(record, "v=spf1") {
+			hasSPF = true
+			spfRecord = record
+			break
 		}
-
 	}
 
+	dmarcRecords, err := net.LookupTXT("_dmarc." + domain)
+	if err != nil {
+		log.Printf("ErrorL%v\n", err)
+	}
+
+	for _, record := range dmarcRecords {
+		if strings.HasPrefix(record, "v=DMARC1") {
+			hasDMARC = true
+			dmarcRecord = record
+			break
+		}
+	}
+
+	fmt.Printf("%v, %v, %v, %v, %v, %v\n", domain, hasMX, hasSPF, spfRecord, hasDMARC, dmarcRecord)
 }
