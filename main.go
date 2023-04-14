@@ -37,7 +37,7 @@ func check_mx_spr_dmarc(domain string) {
 	txtRecords, err := net.LookupTXT(domain)
 
 	if err != nil {
-		log.Printf("Error:%v\n", err)
+		log.Printf("Error: %v\n", err)
 	}
 
 	for _, record := range txtRecords {
@@ -50,7 +50,7 @@ func check_mx_spr_dmarc(domain string) {
 
 	dmarcRecords, err := net.LookupTXT("_dmarc." + domain)
 	if err != nil {
-		log.Printf("ErrorL%v\n", err)
+		log.Printf("Error: %v\n", err)
 	}
 
 	for _, record := range dmarcRecords {
